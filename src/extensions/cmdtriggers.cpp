@@ -5,7 +5,7 @@
 #define CT_COMPLETE 2
 #define CT_RESERVED 1672
 
-#define VERSION "v0.0.8"
+#define VERSION "v0.0.9"
 
 extern "C" int onExtensionLoad(hmExtension &handle, hmGlobal *global)
 {
@@ -24,7 +24,7 @@ struct ConsoleTrigger
     std::string name;
     std::string plugin;
     int coords[2] = { 0, 0 };
-    int (*callback)(hmHandle&,const std::string&,std::smatch);
+    int (*callback)(hmHandle&,const std::string&,rens::smatch);
 };
 
 std::vector<ConsoleTrigger> consoleTriggers;
@@ -49,7 +49,7 @@ int onCMDTrigPluginEnd(hmHandle &handle)
     return 0;
 }
 
-int triggerCallback(hmHandle &handle, hmHook hook, std::smatch args)
+int triggerCallback(hmHandle &handle, hmHook hook, rens::smatch args)
 {
     int ret = 0;
     std::string name = hook.name.substr(3,std::string::npos);
@@ -74,7 +74,7 @@ int triggerCallback(hmHandle &handle, hmHook hook, std::smatch args)
     return (ret & CT_HANDLED);
 }
 
-int createNewTrigger(std::string name, std::string plugin, int (*callback)(hmHandle&,const std::string&,std::smatch), int &x, int &y)
+int createNewTrigger(std::string name, std::string plugin, int (*callback)(hmHandle&,const std::string&,rens::smatch), int &x, int &y)
 {
     x = y = 0;
     int d = 1, m = 1;
@@ -135,10 +135,10 @@ extern "C" void initConsoleTriggers(hmHandle &handle)
     handle.hookEvent(CT_RESERVED,HM_ONPLUGINEND_FUNC,false);
 }
 
-extern "C" int genericConsoleTrigger(hmHandle &handle, std::string name, int (*callback)(hmHandle&,const std::string&,std::smatch), std::string command)
+extern "C" int genericConsoleTrigger(hmHandle &handle, std::string name, int (*callback)(hmHandle&,const std::string&,rens::smatch), std::string command)
 {
-    std::regex noExec ("^execute .*\\bas\\b.*\\brun\\b.*");
-    if (std::regex_match(command,noExec))
+    static rens::regex noExec ("^execute .*\\bas\\b.*\\brun\\b.*");
+    if (rens::regex_match(command,noExec))
     {
         hmOutDebug("Error: Generic Console Triggers cannot contain commands that are executed as another entity!");
         return 1;
@@ -151,7 +151,7 @@ extern "C" int genericConsoleTrigger(hmHandle &handle, std::string name, int (*c
     return 0;
 }
 
-extern "C" int advancedConsoleTrigger(hmHandle &handle, std::string name, std::string pattern, int (*callback)(hmHandle&,const std::string&,std::smatch), std::string command)
+extern "C" int advancedConsoleTrigger(hmHandle &handle, std::string name, std::string pattern, int (*callback)(hmHandle&,const std::string&,rens::smatch), std::string command)
 {
     int x, z;
     if (createNewTrigger(name,handle.getPath(),callback,x,z))

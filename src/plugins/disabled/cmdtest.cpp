@@ -5,11 +5,11 @@
 #define CT_HANDLED  1
 #define CT_COMPLETE 2
 
-#define VERSION "v0.0.7"
+#define VERSION "v0.0.8"
 
 static void (*initConsoleTriggers)(hmHandle&);
-static int (*genericConsoleTrigger)(hmHandle&,std::string,int (*)(hmHandle&,const std::string&,std::smatch),std::string);
-static int (*advancedConsoleTrigger)(hmHandle&,std::string,std::string,int (*)(hmHandle&,const std::string&,std::smatch),std::string);
+static int (*genericConsoleTrigger)(hmHandle&,std::string,int (*)(hmHandle&,const std::string&,rens::smatch),std::string);
+static int (*advancedConsoleTrigger)(hmHandle&,std::string,std::string,int (*)(hmHandle&,const std::string&,rens::smatch),std::string);
 
 int doTheLoop(hmHandle &handle, const hmPlayer &client, std::string args[], int argc);
 
@@ -42,37 +42,37 @@ extern "C" int onPluginEnd(hmHandle &handle)
     return 0;
 }
 
-int cb1(hmHandle &handle, const std::string &name, std::smatch args)
+int cb1(hmHandle &handle, const std::string &name, rens::smatch args)
 {
     hmSendRaw("say cb1 reporting for duty! " + args[2].str());
     return CT_CONTINUE;
 }
 
-int cb2(hmHandle &handle, const std::string &name, std::smatch args)
+int cb2(hmHandle &handle, const std::string &name, rens::smatch args)
 {
     hmSendRaw("say cb2 at your service! " + args[2].str());
     return CT_HANDLED;
 }
 
-int cb3(hmHandle &handle, const std::string &name, std::smatch args)
+int cb3(hmHandle &handle, const std::string &name, rens::smatch args)
 {
     hmSendRaw("say all cb3 systems go! " + args[1].str() + ": " + args[2].str());
     return CT_HANDLED;
 }
 
-int cb4(hmHandle &handle, const std::string &name, std::smatch args)
+int cb4(hmHandle &handle, const std::string &name, rens::smatch args)
 {
     hmSendRaw("say cb4 clocking out for the day! " + args[2].str());
     return CT_COMPLETE|CT_HANDLED;
 }
 
-int cb5(hmHandle &handle, const std::string &name, std::smatch args)
+int cb5(hmHandle &handle, const std::string &name, rens::smatch args)
 {
     hmSendRaw("say cb5 is too drunx! " + args[2].str());
     return CT_COMPLETE;
 }
 
-int cbloop(hmHandle &handle, const std::string &name, std::smatch args)
+int cbloop(hmHandle &handle, const std::string &name, rens::smatch args)
 {
     hmSendRaw("say Test #" + name + "\ntag @a remove " + std::to_string(stoi(name)-1));
     if (name == "0")
@@ -93,7 +93,7 @@ int setupLoop(hmHandle &handle)
     return j;
 }
 
-int getDebugResults(hmHandle &handle, hmHook hook, std::smatch args)
+int getDebugResults(hmHandle &handle, hmHook hook, rens::smatch args)
 {
     handle.unhookPattern(hook.name);
     std::string obj = gettok(hook.name,2,"\n"), seconds = gettok(hook.name,3,"\n"), realtime = args[1].str(), ticks = args[2].str(), tps = args[3].str();
@@ -102,26 +102,26 @@ int getDebugResults(hmHandle &handle, hmHook hook, std::smatch args)
     return 1;
 }
 
-int startDebugTPS(hmHandle &handle, const std::string &name, std::smatch args);
+int startDebugTPS(hmHandle &handle, const std::string &name, rens::smatch args);
 
 int stopDebugTPS(hmHandle &handle, std::string args)
 {
     // Stopped debug profiling after 8.90 seconds and 178 ticks (20.00 ticks per second)
     handle.hookPattern("debugPattern\n" + args,"^\\[[0-9]{2}:[0-9]{2}:[0-9]{2}\\] \\[Server thread/INFO\\]: Stopped debug profiling after ([^ ]+) seconds and ([^ ]+) ticks \\(([^ ]+) ticks per second\\)$",&getDebugResults);
     hmSendRaw("debug stop");
-    std::smatch nada;
+    rens::smatch nada;
     startDebugTPS(handle,"stop",nada);
     return 1;
 }
 
-int startDebugTPS(hmHandle &handle, const std::string &name, std::smatch args)
+int startDebugTPS(hmHandle &handle, const std::string &name, rens::smatch args)
 {
     static bool running = false;
     if (!running)
     {
-        std::regex ptrn ("^Set \\[(.+?)\\] for .+ to -?(\\d+)$");
-        std::smatch ml;
-        if (std::regex_match(args[2].str(),ml,ptrn))
+        static rens::regex ptrn ("^Set \\[(.+?)\\] for .+ to -?(\\d+)$");
+        rens::smatch ml;
+        if (rens::regex_match(args[2].str(),ml,ptrn))
         {
             std::string obj = ml[1].str(), seconds = ml[2].str();
             hmSendRaw("debug start\nscoreboard players reset @e[tag=tps_calc] tps_time\ntag @e[tag=tps_calc] remove tps_calc");
@@ -139,7 +139,7 @@ int doTheLoop(hmHandle &handle, const hmPlayer &client, std::string args[], int 
     return 0;
 }
 
-extern "C" int onWorldInit(hmHandle &handle, std::smatch args)
+extern "C" int onWorldInit(hmHandle &handle, rens::smatch args)
 {
     genericConsoleTrigger(handle,"cb1",&cb1,"data get entity @a[limit=1,tag=poop] Dimension");
     genericConsoleTrigger(handle,"cb2",&cb2,"tag @a[tag=foo] remove foo");
